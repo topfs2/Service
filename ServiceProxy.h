@@ -20,10 +20,6 @@
  *
  */
 
-#include <string>
-#include <typeinfo>
-#include <map>
-
 template<class S> class CServiceProxy
 {
 private:
