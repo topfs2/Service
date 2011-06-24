@@ -21,7 +21,7 @@
  */
 
 #include "Variant.h"
-#include "Service.h"
+#include "ServiceProxy.h"
 #include <map>
 #include <vector>
 
@@ -105,14 +105,14 @@ template<class S, class C> class CServiceBaseCallback
 public:
   CServiceBaseCallback()
   {
-    CService<S> service;
+    CServiceProxy<S> service;
     service->AttachCallback((C *)this);
   }
 
 
   virtual ~CServiceBaseCallback()
   {
-    CService<S> service;
+    CServiceProxy<S> service;
     service->DetachCallback((C *)this);
   }
 

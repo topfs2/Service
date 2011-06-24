@@ -21,7 +21,7 @@
  */
 
 #include "IServiceBase.h"
-#include "Service.h"
+#include "ServiceProxy.h"
 
 class CPowerService;
 
@@ -43,5 +43,5 @@ public:
 private:
   static CPowerService *m_instance;
 
-  friend CPowerService *CService<CPowerService>::GetInstance();
+  friend CPowerService *CServiceProxy<CPowerService>::GetInstance();
 };

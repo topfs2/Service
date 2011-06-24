@@ -20,7 +20,7 @@
  */
 
 #include "PowerService.h"
-#include "Service.h"
+#include "ServiceProxy.h"
 
 CPowerService *CPowerService::m_instance = NULL;
 
@@ -48,7 +48,7 @@ void CPowerService::Test()
 
 template<>
 inline
-CPowerService *CService<CPowerService>::GetInstance()
+CPowerService *CServiceProxy<CPowerService>::GetInstance()
 {
   return CPowerService::GetInstance();
 }

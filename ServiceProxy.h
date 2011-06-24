@@ -24,12 +24,12 @@
 #include <typeinfo>
 #include <map>
 
-template<class S> class CService
+template<class S> class CServiceProxy
 {
 private:
   S *m_ptr;
 public:
-  CService() : m_ptr(0)
+  CServiceProxy() : m_ptr(0)
   {
     m_ptr = GetInstance();
     if (m_ptr == NULL)
@@ -45,7 +45,7 @@ public:
 
     template<>
     inline
-    CFooService *CService<CFooService>::GetInstance()
+    CFooService *CServiceProxy<CFooService>::GetInstance()
     {
       ...
     }

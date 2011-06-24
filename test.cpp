@@ -20,7 +20,7 @@
  */
 
 #include "Variant.h"
-#include "Service.h"
+#include "ServiceProxy.h"
 #include "PowerService.h"
 #include <iostream>
 
@@ -37,7 +37,7 @@ public:
 
 int main()
 {
-  CService<CPowerService> pm;
+  CServiceProxy<CPowerService> pm;
   cout << pm->GetProperty("CanPowerdown", CVariant()).asBoolean() << endl;
 
   MyTestCallback test;
