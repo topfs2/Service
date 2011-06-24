@@ -39,7 +39,7 @@ private:
 public:
   virtual ~CServiceBase() { }
 
-  const CVariant &GetProperty(const std::string &name, const CVariant &fallback) const
+  const CVariant &GetProperty(const std::string &name, const CVariant &fallback = CVariant::ConstNullVariant) const
   {
     PropertyMap::const_iterator itr = m_properties.find(name);
     if (itr == m_properties.end())
@@ -48,13 +48,9 @@ public:
       return itr->second;
   }
   
-  const CVariant &operator[](const std::string &name) const
+  inline const CVariant &operator[](const std::string &name) const
   {
-    PropertyMap::const_iterator itr = m_properties.find(name);
-    if (itr == m_properties.end())
-      return CVariant::ConstNullVariant;
-    else
-      return itr->second;
+    return GetProperty(name);
   }
 
 protected:
