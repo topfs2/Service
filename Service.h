@@ -24,8 +24,6 @@
 #include <typeinfo>
 #include <map>
 
-std::map<std::string, void *> service_data;
-
 template<class S> class CService
 {
 private:
@@ -33,10 +31,8 @@ private:
 public:
   CService() : m_ptr(0)
   {
-    std::map<std::string, void *>::iterator itr = service_data.find(typeid(S).name());
-    if (itr != service_data.end())
-      m_ptr = (S *)itr->second;
-    else
+    m_ptr = GetInstance();
+    if (m_ptr == NULL)
       throw;
   }
 
@@ -45,8 +41,14 @@ public:
     return m_ptr;
   }
 
-  static void AddService(void *service)
-  {
-    service_data[typeid(S).name()] = service;
-  }
+  /* Any service who whishes to work needs to define this function for their particular service. They can do so by using the following template in their cpp, the compiler will choose that one over this default:
+
+    template<>
+    inline
+    CFooService *CService<CFooService>::GetInstance()
+    {
+      ...
+    }
+  */
+  static S *GetInstance() { return NULL; }
 };

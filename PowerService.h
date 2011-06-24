@@ -1,3 +1,4 @@
+#pragma once
 /*
  *      Copyright (C) 2011 Tobias Arrskog
  *      https://github.com/topfs2/Service
@@ -19,35 +20,28 @@
  *
  */
 
-#include "Variant.h"
+#include "IServiceBase.h"
 #include "Service.h"
-#include "PowerService.h"
-#include <iostream>
 
-using namespace std;
+class CPowerService;
 
-class MyTestCallback : public CPowerServiceCallback
+class CPowerServiceCallback : public CServiceBaseCallback<CPowerService, CPowerServiceCallback>
 {
 public:
-  virtual void OnPropertyChange(const std::string &name, const CVariant &property)
-  {
-    cout << "OnPropertyChange(" << name << ", " << property.asBoolean() << ");" << endl;
-  }
+  CPowerServiceCallback();
 };
 
-int main()
+class CPowerService : public CServiceBase<CPowerService, CPowerServiceCallback>
 {
-  CService<CPowerService> pm;
-  cout << pm->GetProperty("CanPowerdown", CVariant()).asBoolean() << endl;
+private:
+  CPowerService();
+  static CPowerService *GetInstance();
 
-  MyTestCallback test;
-  
-  pm->Test();
-  pm->Test();
-  
-  // Alternative instead of CVariant properties, use Property<T>(const std::string &name, T defaultValue) in CServiceBase and enforce static typing.
-  // With this we can do a static_cast to the given property value in the map and have the following API:
-  //pm.GetProperty<bool>("CanPowerdown");
+public:
+  void Test();
 
-  return 0;
-}
+private:
+  static CPowerService *m_instance;
+
+  friend CPowerService *CService<CPowerService>::GetInstance();
+};

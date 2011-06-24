@@ -19,35 +19,36 @@
  *
  */
 
-#include "Variant.h"
-#include "Service.h"
 #include "PowerService.h"
-#include <iostream>
+#include "Service.h"
 
-using namespace std;
+CPowerService *CPowerService::m_instance = NULL;
 
-class MyTestCallback : public CPowerServiceCallback
+CPowerServiceCallback::CPowerServiceCallback() : CServiceBaseCallback<CPowerService, CPowerServiceCallback>()
 {
-public:
-  virtual void OnPropertyChange(const std::string &name, const CVariant &property)
-  {
-    cout << "OnPropertyChange(" << name << ", " << property.asBoolean() << ");" << endl;
-  }
-};
+}
 
-int main()
+CPowerService *CPowerService::GetInstance()
 {
-  CService<CPowerService> pm;
-  cout << pm->GetProperty("CanPowerdown", CVariant()).asBoolean() << endl;
+  if (m_instance == NULL)
+    m_instance = new CPowerService();
 
-  MyTestCallback test;
-  
-  pm->Test();
-  pm->Test();
-  
-  // Alternative instead of CVariant properties, use Property<T>(const std::string &name, T defaultValue) in CServiceBase and enforce static typing.
-  // With this we can do a static_cast to the given property value in the map and have the following API:
-  //pm.GetProperty<bool>("CanPowerdown");
+  return m_instance;
+}
 
-  return 0;
+CPowerService::CPowerService() : CServiceBase<CPowerService, CPowerServiceCallback>()
+{
+  SetProperty("CanPowerdown", true);
+}
+  
+void CPowerService::Test()
+{
+  SetProperty("CanPowerdown", false);
+}
+
+template<>
+inline
+CPowerService *CService<CPowerService>::GetInstance()
+{
+  return CPowerService::GetInstance();
 }
