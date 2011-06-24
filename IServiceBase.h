@@ -69,7 +69,7 @@ protected:
   }
 
 private:
-  bool RegisterCallback(C *callback)
+  bool AttachCallback(C *callback)
   {
     if (callback == NULL)
       return false;
@@ -78,7 +78,7 @@ private:
     return true;
   }
 
-  bool UnRegisterCallback(C *callback)
+  bool DetachCallback(C *callback)
   {
     for (typename CallbackVector::iterator itr = m_callbacks.begin(); itr != m_callbacks.end(); itr++)
     {
@@ -106,14 +106,14 @@ public:
   CServiceBaseCallback()
   {
     CService<S> service;
-    service->RegisterCallback((C *)this);
+    service->AttachCallback((C *)this);
   }
 
 
   virtual ~CServiceBaseCallback()
   {
     CService<S> service;
-    service->UnRegisterCallback((C *)this);
+    service->DetachCallback((C *)this);
   }
 
   virtual void OnPropertyChange(const std::string &name, const CVariant &property) = 0;
