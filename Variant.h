@@ -51,6 +51,7 @@ public:
   CVariant(const char *str);
   CVariant(const char *str, unsigned int length);
   CVariant(const std::string &str);
+  CVariant(const std::vector<std::string> &strArray);
   CVariant(const CVariant &variant);
 
   ~CVariant();
@@ -72,6 +73,13 @@ public:
   const char *asString(const char *fallback = "") const;
   double asDouble(double fallback = 0.0) const;
   float asFloat(float fallback = 0.0f) const;
+  
+  inline operator int64_t() const { return asInteger(); }
+  inline operator uint64_t() const { return asUnsignedInteger(); }
+  inline operator bool() const { return asBoolean(); }
+  inline operator const char*() const { return asString(); }
+  inline operator double() const { return asDouble(); }
+  inline operator float() const { return asFloat(); }
 
   CVariant &operator[](std::string key);
   const CVariant &operator[](std::string key) const;

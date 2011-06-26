@@ -31,14 +31,15 @@ class MyTestCallback : public CPowerServiceCallback
 public:
   virtual void OnPropertyChange(const std::string &name, const CVariant &property)
   {
-    cout << "OnPropertyChange(" << name << ", " << property.asBoolean() << ");" << endl;
+    cout << "OnPropertyChange(" << name << ", " << (bool)property << ");" << endl;
   }
 };
 
 int main()
 {
   CServiceProxy<CPowerService> pm;
-  cout << pm->GetProperty("CanPowerdown", CVariant()).asBoolean() << endl;
+  bool canPowerdown = pm->GetProperty("CanPowerdown");
+  cout << canPowerdown << endl;
 
   MyTestCallback test;
   

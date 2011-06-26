@@ -118,6 +118,14 @@ CVariant::CVariant(const string &str)
   m_data.string = new string(str);
 }
 
+CVariant::CVariant(const std::vector<std::string> &strArray)
+{
+  m_type = VariantTypeArray;
+  m_data.array = new VariantArray();
+  for (unsigned int index = 0; index < strArray.size(); index++)
+    m_data.array->push_back(strArray.at(index));
+}
+
 CVariant::CVariant(const CVariant &variant)
 {
   m_type = variant.m_type;
@@ -190,50 +198,96 @@ CVariant::VariantType CVariant::type() const
 
 int64_t CVariant::asInteger(int64_t fallback) const
 {
-  if (m_type == VariantTypeInteger)
+  switch (m_type)
+  {
+  case VariantTypeInteger:
     return m_data.integer;
-  else
-    return fallback;
+  case VariantTypeUnsignedInteger:
+    return (int64_t)m_data.unsignedinteger;
+  case VariantTypeDouble:
+    return (int64_t)m_data.dvalue;
+  }
+  
+  return fallback;
 }
 
 uint64_t CVariant::asUnsignedInteger(uint64_t fallback) const
 {
-  if (m_type == VariantTypeUnsignedInteger)
+  switch (m_type)
+  {
+  case VariantTypeUnsignedInteger:
     return m_data.unsignedinteger;
-  else
-    return fallback;
+  case VariantTypeInteger:
+    return (uint64_t)m_data.integer;
+  case VariantTypeDouble:
+    return (uint64_t)m_data.dvalue;
+  }
+  
+  return fallback;
 }
 
 double CVariant::asDouble(double fallback) const
 {
-  if (m_type == VariantTypeDouble)
+  switch (m_type)
+  {
+  case VariantTypeDouble:
     return m_data.dvalue;
-  else
-    return fallback;
+  case VariantTypeInteger:
+    return (double)m_data.integer;
+  case VariantTypeUnsignedInteger:
+    return (double)m_data.unsignedinteger;
+  }
+  
+  return fallback;
 }
 
 float CVariant::asFloat(float fallback) const
 {
-  if (m_type == VariantTypeDouble)
+  switch (m_type)
+  {
+  case VariantTypeDouble:
     return (float)m_data.dvalue;
-  else
-    return fallback;
+  case VariantTypeInteger:
+    return (float)m_data.integer;
+  case VariantTypeUnsignedInteger:
+    return (float)m_data.unsignedinteger;
+  }
+  
+  return fallback;
 }
 
 bool CVariant::asBoolean(bool fallback) const
 {
-  if (m_type == VariantTypeBoolean)
+  switch (m_type)
+  {
+  case VariantTypeBoolean:
     return m_data.boolean;
-  else
-    return fallback;
+  case VariantTypeInteger:
+    return (bool)m_data.integer;
+  case VariantTypeUnsignedInteger:
+    return (bool)m_data.unsignedinteger;
+  case VariantTypeDouble:
+    return (bool)m_data.dvalue;
+  case VariantTypeString:
+    if (m_data.string->empty() || m_data.string->compare("0") || m_data.string->compare("false"))
+      return false;
+    return true;
+  }
+  
+  return fallback;
 }
 
 const char *CVariant::asString(const char *fallback) const
 {
-  if (m_type == VariantTypeString)
+  switch (m_type)
+  {
+  case VariantTypeString:
     return m_data.string->c_str();
-  else
-    return fallback;
+  case VariantTypeBoolean:
+    return m_data.boolean ? "true" : "false";
+  }
+  
+  return fallback;
 }
 
 CVariant &CVariant::operator[](string key)
