@@ -63,7 +63,7 @@ protected:
     }
   }
 
-private:
+public:
   bool AttachCallback(C *callback)
   {
     if (callback == NULL)
@@ -102,18 +102,8 @@ private:
 template<class S, class C> class CServiceBaseCallback
 {
 public:
-  CServiceBaseCallback()
-  {
-    CServiceProxy<S> service;
-    service->AttachCallback((C *)this);
-  }
-
-
-  virtual ~CServiceBaseCallback()
-  {
-    CServiceProxy<S> service;
-    service->DetachCallback((C *)this);
-  }
+  CServiceBaseCallback() { }
+  virtual ~CServiceBaseCallback() { }
 
   virtual void OnPropertyChange(const std::string &name, const CVariant &property) { }
 };

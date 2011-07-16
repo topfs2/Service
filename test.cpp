@@ -29,6 +29,18 @@ using namespace std;
 class MyTestCallback : public CPowerServiceCallback
 {
 public:
+  MyTestCallback()
+  {
+    CServiceProxy<CPowerService> service;
+    service->AttachCallback((CPowerServiceCallback *)this);
+  }
+
+  ~MyTestCallback()
+  {
+    CServiceProxy<CPowerService> service;
+    service->DetachCallback((CPowerServiceCallback *)this);
+  }
+
   virtual void OnPropertyChange(const std::string &name, const CVariant &property)
   {
     cout << "OnPropertyChange(" << name << ", " << (bool)property << ");" << endl;
