@@ -20,7 +20,7 @@
  *
  */
 
-#include "IServiceBase.h"
+#include "ServiceBase.h"
 #include "ServiceProxy.h"
 
 class CPowerService;
