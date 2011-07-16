@@ -75,6 +75,9 @@ private:
 
   bool DetachCallback(C *callback)
   {
+    if (callback == NULL)
+      return false;
+
     for (typename CallbackVector::iterator itr = m_callbacks.begin(); itr != m_callbacks.end(); itr++)
     {
       if (*itr == callback)
