@@ -115,5 +115,5 @@ public:
     service->DetachCallback((C *)this);
   }
 
-  virtual void OnPropertyChange(const std::string &name, const CVariant &property) = 0;
+  virtual void OnPropertyChange(const std::string &name, const CVariant &property) { }
 };
