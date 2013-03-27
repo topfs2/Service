@@ -21,27 +21,17 @@
  */
 
 #include "ServiceBase.h"
-#include "ServiceProxy.h"
 
-class CPowerService;
-
-class CPowerServiceCallback : public CServiceBaseCallback<CPowerService, CPowerServiceCallback>
+class CPowerService : public CServiceBase
 {
 public:
-  CPowerServiceCallback();
-};
+    CPowerService();
+    virtual ~CPowerService();
 
-class CPowerService : public CServiceBase<CPowerService, CPowerServiceCallback>
-{
-private:
-  CPowerService();
-  static CPowerService *GetInstance();
+    void Shutdown();
+    void Sleep();
 
-public:
-  void Test();
-
-private:
-  static CPowerService *m_instance;
-
-  friend CPowerService *CServiceProxy<CPowerService>::GetInstance();
+    voidSignal onShutdown;
+    voidSignal onSleep;
+    voidSignal onWake;
 };

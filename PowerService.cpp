@@ -20,35 +20,21 @@
  */
 
 #include "PowerService.h"
-#include "ServiceProxy.h"
 
-CPowerService *CPowerService::m_instance = NULL;
-
-CPowerServiceCallback::CPowerServiceCallback() : CServiceBaseCallback<CPowerService, CPowerServiceCallback>()
+CPowerService::CPowerService()
 {
 }
 
-CPowerService *CPowerService::GetInstance()
+CPowerService::~CPowerService()
 {
-  if (m_instance == NULL)
-    m_instance = new CPowerService();
-
-  return m_instance;
 }
 
-CPowerService::CPowerService() : CServiceBase<CPowerService, CPowerServiceCallback>()
+void CPowerService::Shutdown()
 {
-  SetProperty("CanPowerdown", true);
-}
-  
-void CPowerService::Test()
-{
-  SetProperty("CanPowerdown", false);
+    onShutdown();
 }
 
-template<>
-inline
-CPowerService *CServiceProxy<CPowerService>::GetInstance()
+void CPowerService::Sleep()
 {
-  return CPowerService::GetInstance();
+    onSleep();
 }

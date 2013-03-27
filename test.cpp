@@ -19,48 +19,97 @@
  *
  */
 
-#include "Variant.h"
-#include "ServiceProxy.h"
-#include "PowerService.h"
 #include <iostream>
+#include <string>
+#include <boost/bind.hpp>
+#include <boost/ref.hpp>
+#include <boost/signals2/deconstruct.hpp>
+#include <boost/shared_ptr.hpp>
 
-using namespace std;
+#include "PowerService.h"
+#include "Variant.h"
 
-class MyTestCallback : public CPowerServiceCallback
+void onPropertyChange(std::string key, CVariant value)
+{
+    std::cout << "onPropertyChange(" << key << ", " << (std::string)value << ")" << std::endl;
+}
+
+void onShutdown()
+{
+    std::cout << "onShutdown" << std::endl;
+}
+
+void onSleep()
+{
+    std::cout << "onSleep" << std::endl;
+}
+
+class CFirstCallback
 {
 public:
-  MyTestCallback()
-  {
-    CServiceProxy<CPowerService> service;
-    service->AttachCallback((CPowerServiceCallback *)this);
-  }
+    void onPropertyChange(std::string key, CVariant value)
+    {
+        std::cout << "CFirstCallback::onPropertyChange(" << key << ", " << (std::string)value << ")" << std::endl;
+    }
 
-  ~MyTestCallback()
-  {
-    CServiceProxy<CPowerService> service;
-    service->DetachCallback((CPowerServiceCallback *)this);
-  }
+    void onShutdown()
+    {
+        std::cout << "CFirstCallback::onShutdown" << std::endl;
+    }
 
-  virtual void OnPropertyChange(const std::string &name, const CVariant &property)
-  {
-    cout << "OnPropertyChange(" << name << ", " << (bool)property << ");" << endl;
-  }
+    void onSleep()
+    {
+        std::cout << "CFirstCallback::onSleep" << std::endl;
+    }
 };
 
-int main()
+typedef boost::shared_ptr<CFirstCallback> CFirstCallbackPtr;
+
+/*
+ * Notice that using boost::signals2::trackable is discouraged due to it not always being threadsafe.
+ */
+class CSecondCallback : public boost::signals2::trackable
 {
-  CServiceProxy<CPowerService> pm;
-  bool canPowerdown = pm->GetProperty("CanPowerdown");
-  cout << canPowerdown << endl;
+public:
+    void onPropertyChange(std::string key, CVariant value)
+    {
+        std::cout << "CSecondCallback::onPropertyChange(" << key << ", " << (std::string)value << ")" << std::endl;
+    }
 
-  MyTestCallback test;
-  
-  pm->Test();
-  pm->Test();
-  
-  // Alternative instead of CVariant properties, use Property<T>(const std::string &name, T defaultValue) in CServiceBase and enforce static typing.
-  // With this we can do a static_cast to the given property value in the map and have the following API:
-  //pm.GetProperty<bool>("CanPowerdown");
+    void onShutdown()
+    {
+        std::cout << "CSecondCallback::onShutdown" << std::endl;
+    }
 
-  return 0;
+    void onSleep()
+    {
+        std::cout << "CSecondCallback::onSleep" << std::endl;
+    }
+};
+
+int main() {
+    CPowerService pm;
+    pm.onPropertyChange.connect(&onPropertyChange);
+    pm.onShutdown.connect(onShutdown);
+    pm.onSleep.connect(onSleep);
+
+    {
+        CFirstCallbackPtr ptr(new CFirstCallback());
+        pm.onPropertyChange.connect(CServiceBase::propertySignal::slot_type(&CFirstCallback::onPropertyChange, ptr.get(), _1, _2).track(ptr));
+        pm.onShutdown.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onShutdown, ptr.get()).track(ptr));
+        pm.onSleep.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onSleep, ptr.get()).track(ptr));
+
+        CSecondCallback *ptrTwo = new CSecondCallback();
+        pm.onPropertyChange.connect(boost::bind(&CSecondCallback::onPropertyChange, ptrTwo, _1, _2));
+        pm.onShutdown.connect(boost::bind(&CSecondCallback::onShutdown, ptrTwo));
+        pm.onSleep.connect(boost::bind(&CSecondCallback::onSleep, ptrTwo));
+
+        std::cout << "==Calling sleep==" << std::endl;
+        pm.Sleep();
+
+        delete ptrTwo;
+    }
+
+    std::cout << "==Calling shutdown==" << std::endl;
+    pm.Shutdown();
 }

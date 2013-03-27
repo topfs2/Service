@@ -2,8 +2,8 @@
 
 all: test
 
-test: test.cpp Variant.cpp Variant.h PowerService.cpp PowerService.h ServiceBase.h ServiceProxy.h
-	$(CXX) $(CFLAGS) Variant.cpp PowerService.cpp test.cpp -o test
+test: test.cpp Variant.cpp Variant.h PowerService.cpp PowerService.h ServiceBase.cpp ServiceBase.h
+	$(CXX) $(CFLAGS) Variant.cpp ServiceBase.cpp PowerService.cpp test.cpp -o test
 
 clean:
 	$(RM) test

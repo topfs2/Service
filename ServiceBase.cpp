@@ -1,4 +1,3 @@
-#pragma once
 /*
  *      Copyright (C) 2013 Tobias Arrskog
  *      https://github.com/topfs2/Service
@@ -20,31 +19,36 @@
  *
  */
 
-template<class S> class CServiceProxy
+#include "ServiceBase.h"
+
+CServiceBase::CServiceBase()
 {
-private:
-  S *m_ptr;
-public:
-  CServiceProxy() : m_ptr(0)
-  {
-    m_ptr = GetInstance();
-    if (m_ptr == NULL)
-      throw;
-  }
+}
 
-  S *operator-> ()
-  {
-    return m_ptr;
-  }
+CServiceBase::~CServiceBase()
+{
+}
 
-  /* Any service who whishes to work needs to define this function for their particular service. They can do so by using the following template in their cpp, the compiler will choose that one over this default:
+CVariant CServiceBase::GetProperty(const std::string &name, const CVariant &fallback) const
+{
+    PropertyMap::const_iterator itr = m_properties.find(name);
+    if (itr == m_properties.end())
+      return fallback;
+    else
+      return itr->second;
+}
 
-    template<>
-    inline
-    CFooService *CServiceProxy<CFooService>::GetInstance()
+CVariant CServiceBase::operator[](const std::string &name) const
+{
+    return GetProperty(name);
+}
+
+void CServiceBase::SetProperty(const std::string &name, const CVariant &variant)
+{
+    PropertyMap::iterator itr = m_properties.find(name);
+    if (itr == m_properties.end() || !variant.Equals(itr->second))
     {
-      ...
+        m_properties[name] = variant;
+        onPropertyChange(name, variant);
     }
-  */
-  static S *GetInstance() { return NULL; }
-};
+}

@@ -20,90 +20,30 @@
  *
  */
 
+#include <string>
+#include <boost/signals2/signal.hpp>
+
 #include "Variant.h"
-#include "ServiceProxy.h"
-#include <map>
-#include <vector>
 
-template<class S, class C> class CServiceBaseCallback;
-
-// S needs to inherit CServiceBase and C needs to inherit CServiceBaseCallback, otherwise it will fail to compile.
-template<class S, class C> class CServiceBase
-{
-  #define VOID_SIGNAL for (typename CallbackVector::iterator itr = m_callbacks.begin(); itr != m_callbacks.end(); itr++) (*itr)->
-  
-private:
-  typedef std::map<std::string, CVariant> PropertyMap;
-
-public:
-  virtual ~CServiceBase() { }
-
-  CVariant GetProperty(const std::string &name, const CVariant &fallback = CVariant::ConstNullVariant) const
-  {
-    PropertyMap::const_iterator itr = m_properties.find(name);
-    if (itr == m_properties.end())
-      return fallback;
-    else
-      return itr->second;
-  }
-  
-  inline CVariant operator[](const std::string &name) const
-  {
-    return GetProperty(name);
-  }
-
-protected:
-  void SetProperty(const std::string &name, const CVariant &variant)
-  {
-    PropertyMap::iterator itr = m_properties.find(name);
-    if (itr == m_properties.end() || !variant.Equals(itr->second))
-    {
-      m_properties[name] = variant;
-      VOID_SIGNAL OnPropertyChange(name, variant);
-    }
-  }
-
-public:
-  bool AttachCallback(C *callback)
-  {
-    if (callback == NULL)
-      return false;
-      
-    m_callbacks.push_back(callback);
-    return true;
-  }
-
-  bool DetachCallback(C *callback)
-  {
-    if (callback == NULL)
-      return false;
-
-    for (typename CallbackVector::iterator itr = m_callbacks.begin(); itr != m_callbacks.end(); itr++)
-    {
-      if (*itr == callback)
-      {
-        m_callbacks.erase(itr);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-protected:
-  typedef std::vector<C *> CallbackVector;
-  CallbackVector m_callbacks;
-private:
-  PropertyMap m_properties;
-
-  friend class CServiceBaseCallback<S, C>;
-};
-
-template<class S, class C> class CServiceBaseCallback
+class CServiceBase
 {
 public:
-  CServiceBaseCallback() { }
-  virtual ~CServiceBaseCallback() { }
+    CServiceBase();
+    virtual ~CServiceBase();
 
-  virtual void OnPropertyChange(const std::string &name, const CVariant &property) { }
+    typedef boost::signals2::signal<void ()> voidSignal;
+
+    typedef boost::signals2::signal<void (std::string, CVariant)> propertySignal;
+    propertySignal onPropertyChange;
+
+
+  CVariant GetProperty(const std::string &name, const CVariant &fallback = CVariant::ConstNullVariant) const;
+  inline CVariant operator[](const std::string &name) const;
+
+protected:
+    void SetProperty(const std::string &name, const CVariant &variant);
+
+private:
+    typedef std::map<std::string, CVariant> PropertyMap;
+    PropertyMap m_properties;
 };
