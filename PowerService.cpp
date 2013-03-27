@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2011 Tobias Arrskog
+ *      Copyright (C) 2013 Tobias Arrskog
  *      https://github.com/topfs2/Service
  *
  *  This Program is free software; you can redistribute it and/or modify
