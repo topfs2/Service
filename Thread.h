@@ -24,6 +24,8 @@
 
 namespace threading
 {
+    typedef pthread_t thread_id_t;
+
     class CThread
     {
     public:
@@ -33,6 +35,8 @@ namespace threading
         void join();
 
         void interrupt();
+
+        static thread_id_t self();
 
     protected:
         static void *staticRun(void *arg);

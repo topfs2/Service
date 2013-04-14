@@ -38,6 +38,11 @@ void CThread::interrupt()
     m_running = false;
 }
 
+thread_id_t CThread::self()
+{
+    return pthread_self();
+}
+
 void *CThread::staticRun(void *arg)
 {
     if (arg == NULL)
