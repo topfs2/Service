@@ -28,6 +28,9 @@
 
 #include "PowerService.h"
 #include "Variant.h"
+#include "SimpleMainloop.h"
+
+CSimpleMainloopPtr mainloop = CSimpleMainloopPtr(new CSimpleMainloop());
 
 void onPropertyChange(std::string key, CVariant value)
 {
@@ -37,6 +40,7 @@ void onPropertyChange(std::string key, CVariant value)
 void onShutdown()
 {
     std::cout << "onShutdown" << std::endl;
+    mainloop->Quit();
 }
 
 void onSleep()
@@ -88,28 +92,28 @@ public:
 };
 
 int main() {
-    CPowerService pm;
+    CPowerService pm(mainloop);
     pm.onPropertyChange.connect(&onPropertyChange);
     pm.onShutdown.connect(onShutdown);
     pm.onSleep.connect(onSleep);
 
-    {
-        CFirstCallbackPtr ptr(new CFirstCallback());
-        pm.onPropertyChange.connect(CServiceBase::propertySignal::slot_type(&CFirstCallback::onPropertyChange, ptr.get(), _1, _2).track(ptr));
-        pm.onShutdown.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onShutdown, ptr.get()).track(ptr));
-        pm.onSleep.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onSleep, ptr.get()).track(ptr));
+    CFirstCallbackPtr ptr(new CFirstCallback());
+    pm.onPropertyChange.connect(CServiceBase::propertySignal::slot_type(&CFirstCallback::onPropertyChange, ptr.get(), _1, _2).track(ptr));
+    pm.onShutdown.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onShutdown, ptr.get()).track(ptr));
+    pm.onSleep.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onSleep, ptr.get()).track(ptr));
 
-        CSecondCallback *ptrTwo = new CSecondCallback();
-        pm.onPropertyChange.connect(boost::bind(&CSecondCallback::onPropertyChange, ptrTwo, _1, _2));
-        pm.onShutdown.connect(boost::bind(&CSecondCallback::onShutdown, ptrTwo));
-        pm.onSleep.connect(boost::bind(&CSecondCallback::onSleep, ptrTwo));
+    CSecondCallback *ptrTwo = new CSecondCallback();
+    pm.onPropertyChange.connect(boost::bind(&CSecondCallback::onPropertyChange, ptrTwo, _1, _2));
+    pm.onShutdown.connect(boost::bind(&CSecondCallback::onShutdown, ptrTwo));
+    pm.onSleep.connect(boost::bind(&CSecondCallback::onSleep, ptrTwo));
 
-        std::cout << "==Calling sleep==" << std::endl;
-        pm.Sleep();
+    std::cout << "==Calling sleep==" << std::endl;
+    pm.Sleep();
 
-        delete ptrTwo;
-    }
+    delete ptrTwo;
 
     std::cout << "==Calling shutdown==" << std::endl;
     pm.Shutdown();
+
+    mainloop->run();
 }

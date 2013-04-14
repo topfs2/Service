@@ -25,7 +25,7 @@
 class CPowerService : public CServiceBase
 {
 public:
-    CPowerService();
+    CPowerService(MainloopPtr mainloop);
     virtual ~CPowerService();
 
     void Shutdown();
@@ -34,4 +34,8 @@ public:
     voidSignal onShutdown;
     voidSignal onSleep;
     voidSignal onWake;
+
+private:
+    void _Shutdown();
+    void _Sleep();
 };

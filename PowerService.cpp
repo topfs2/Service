@@ -21,7 +21,7 @@
 
 #include "PowerService.h"
 
-CPowerService::CPowerService()
+CPowerService::CPowerService(MainloopPtr mainloop) : CServiceBase(mainloop)
 {
 }
 
@@ -31,10 +31,20 @@ CPowerService::~CPowerService()
 
 void CPowerService::Shutdown()
 {
-    onShutdown();
+    m_mainloop->RunOnce(boost::bind(&CPowerService::_Shutdown, this));
 }
 
 void CPowerService::Sleep()
+{
+    m_mainloop->RunOnce(boost::bind(&CPowerService::_Sleep, this));
+}
+
+void CPowerService::_Shutdown()
+{
+    onShutdown();
+}
+
+void CPowerService::_Sleep()
 {
     onSleep();
 }

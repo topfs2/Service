@@ -23,12 +23,14 @@
 #include <string>
 #include <boost/signals2/signal.hpp>
 
+#include "Locks.h"
 #include "Variant.h"
+#include "IMainloop.h"
 
 class CServiceBase
 {
 public:
-    CServiceBase();
+    CServiceBase(MainloopPtr mainloop);
     virtual ~CServiceBase();
 
     typedef boost::signals2::signal<void ()> voidSignal;
@@ -37,13 +39,18 @@ public:
     propertySignal onPropertyChange;
 
 
-  CVariant GetProperty(const std::string &name, const CVariant &fallback = CVariant::ConstNullVariant) const;
-  inline CVariant operator[](const std::string &name) const;
+  CVariant GetProperty(const std::string &name, const CVariant &fallback = CVariant::ConstNullVariant);
+  inline CVariant operator[](const std::string &name);
 
 protected:
     void SetProperty(const std::string &name, const CVariant &variant);
 
+    MainloopPtr m_mainloop;
+
 private:
+    void _GetProperty(std::string name, CVariant fallback, CVariant *result, threading::CCondition *cond);
+    void _SetProperty(const std::string &name, const CVariant &variant);
+
     typedef std::map<std::string, CVariant> PropertyMap;
     PropertyMap m_properties;
 };

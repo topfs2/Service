@@ -21,29 +21,48 @@
 
 #include "ServiceBase.h"
 
-CServiceBase::CServiceBase()
+using namespace threading;
+
+CServiceBase::CServiceBase(MainloopPtr mainloop)
 {
+    m_mainloop = mainloop;
 }
 
 CServiceBase::~CServiceBase()
 {
 }
 
-CVariant CServiceBase::GetProperty(const std::string &name, const CVariant &fallback) const
+CVariant CServiceBase::GetProperty(const std::string &name, const CVariant &fallback)
+{
+    CCondition cond;
+    CVariant result;
+    m_mainloop->RunOnce(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, &result, &cond));
+    cond.wait();
+    return result;
+}
+
+void CServiceBase::_GetProperty(std::string name, CVariant fallback, CVariant *result, CCondition *cond)
 {
     PropertyMap::const_iterator itr = m_properties.find(name);
     if (itr == m_properties.end())
-      return fallback;
+      (*result) = fallback;
     else
-      return itr->second;
+      (*result) = itr->second;
+
+    cond->notifyAll();
 }
 
-CVariant CServiceBase::operator[](const std::string &name) const
+CVariant CServiceBase::operator[](const std::string &name)
 {
     return GetProperty(name);
 }
 
 void CServiceBase::SetProperty(const std::string &name, const CVariant &variant)
+{
+    m_mainloop->RunOnce(boost::bind(&CServiceBase::_SetProperty, this, name, variant));
+}
+
+void CServiceBase::_SetProperty(const std::string &name, const CVariant &variant)
 {
     PropertyMap::iterator itr = m_properties.find(name);
     if (itr == m_properties.end() || !variant.Equals(itr->second))
