@@ -112,8 +112,13 @@ int main() {
 
     delete ptrTwo;
 
+    boost::unique_future<CVariant> f = pm.GetProperty("CanPowerdown", false);
+    std::cout << "Has value for CanPowerdown: " << f.has_value() << std::endl;
+
     std::cout << "==Calling shutdown==" << std::endl;
     pm.Shutdown();
 
     mainloop->run();
+
+    std::cout << "Has value for CanPowerdown: " << f.has_value() << " and it is " << f.get().asBoolean() << std::endl;
 }
