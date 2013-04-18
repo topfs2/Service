@@ -28,9 +28,9 @@
 
 #include "PowerService.h"
 #include "Variant.h"
-#include "SimpleMainloop.h"
+#include "ProcessMainloop.h"
 
-CSimpleMainloopPtr mainloop = CSimpleMainloopPtr(new CSimpleMainloop());
+CProcessMainloopPtr mainloop = CProcessMainloopPtr(new CProcessMainloop());
 
 void onPropertyChange(std::string key, CVariant value)
 {

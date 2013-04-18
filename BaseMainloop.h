@@ -26,11 +26,11 @@
 #include <deque>
 #include <vector>
 
-class CSimpleMainloop : public IMainloop
+class CBaseMainloop : public IMainloop
 {
 public:
-    CSimpleMainloop();
-    virtual ~CSimpleMainloop();
+    CBaseMainloop();
+    virtual ~CBaseMainloop();
 
     virtual void ExecuteOnIdle(RunFunction f);
     virtual void ExecutePeriodical(RunFunction f, uint32_t everyMS);
@@ -38,7 +38,8 @@ public:
 
     virtual void Quit();
 
-    void run();
+protected:
+    void process();
 
 private:
     threading::CCondition m_condition;
@@ -59,5 +60,3 @@ private:
     bool m_run;
     threading::thread_id_t m_threadID;
 };
-
-typedef boost::shared_ptr<CSimpleMainloop> CSimpleMainloopPtr;

@@ -19,26 +19,26 @@
  *
  */
 
-#include "SimpleMainloop.h"
+#include "BaseMainloop.h"
 #include "Time.h"
 
-CSimpleMainloop::CSimpleMainloop()
+CBaseMainloop::CBaseMainloop()
 {
     m_threadID = 0;
     m_run = false;
 }
 
-CSimpleMainloop::~CSimpleMainloop()
+CBaseMainloop::~CBaseMainloop()
 {
     Quit();
 }
 
-void CSimpleMainloop::ExecuteOnIdle(RunFunction f)
+void CBaseMainloop::ExecuteOnIdle(RunFunction f)
 {
     ExecuteAt(f, timing::GetTimeMS());
 }
 
-void CSimpleMainloop::ExecutePeriodical(RunFunction f, uint32_t everyMS)
+void CBaseMainloop::ExecutePeriodical(RunFunction f, uint32_t everyMS)
 {
     m_condition.acquire();
     RunRequest r;
@@ -58,7 +58,7 @@ void CSimpleMainloop::ExecutePeriodical(RunFunction f, uint32_t everyMS)
     m_condition.release();
 }
 
-void CSimpleMainloop::ExecuteAt(RunFunction f, uint32_t atMS)
+void CBaseMainloop::ExecuteAt(RunFunction f, uint32_t atMS)
 {
     m_condition.acquire();
 
@@ -73,12 +73,12 @@ void CSimpleMainloop::ExecuteAt(RunFunction f, uint32_t atMS)
     m_condition.release();
 }
 
-void CSimpleMainloop::Quit()
+void CBaseMainloop::Quit()
 {
     m_run = false;
 }
 
-void CSimpleMainloop::run()
+void CBaseMainloop::process()
 {
     m_run = true;
     m_threadID = threading::CThread::self();
@@ -124,7 +124,7 @@ void CSimpleMainloop::run()
 
 // Private
 // m_condition must be acquired before executed
-CSimpleMainloop::RunQueue::iterator CSimpleMainloop::FindNextScheduled()
+CBaseMainloop::RunQueue::iterator CBaseMainloop::FindNextScheduled()
 {
     RunQueue::iterator lowest = m_schedule.end();
 
