@@ -22,7 +22,9 @@
 
 #include "IMainloop.h"
 #include "Locks.h"
+#include "Thread.h"
 #include <deque>
+#include <vector>
 
 class CSimpleMainloop : public IMainloop
 {
@@ -30,7 +32,9 @@ public:
     CSimpleMainloop();
     virtual ~CSimpleMainloop();
 
-    virtual void RunOnce(RunFunction f);
+    virtual void ExecuteOnIdle(RunFunction f);
+    virtual void ExecutePeriodical(RunFunction f, uint32_t everyMS);
+    virtual void ExecuteAt(RunFunction f, uint32_t atMS);
 
     virtual void Quit();
 
@@ -38,11 +42,22 @@ public:
 
 private:
     threading::CCondition m_condition;
+    struct RunRequest {
+        RunFunction method;
+        long time;
+        int scheduledBy;
+    };
 
-    typedef std::deque<RunFunction> RunQueue;
+    typedef std::vector<RunRequest> RunQueue;
     RunQueue m_schedule;
 
+    typedef std::vector<RunRequest> RunPeriodicalList;
+    RunPeriodicalList m_periodical;
+
+    RunQueue::iterator FindNextScheduled();
+
     bool m_run;
+    threading::thread_id_t m_threadID;
 };
 
 typedef boost::shared_ptr<CSimpleMainloop> CSimpleMainloopPtr;

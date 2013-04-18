@@ -36,7 +36,7 @@ CServiceBase::~CServiceBase()
 unique_future<CVariant> CServiceBase::GetProperty(const std::string &name, const CVariant &fallback)
 {
     CVariantPromisePtr p = CVariantPromisePtr(new CVariantPromise());
-    m_mainloop->RunOnce(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, p));
+    m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, p));
     return p->get_future();
 }
 
@@ -56,7 +56,7 @@ void CServiceBase::_GetProperty(std::string name, CVariant fallback, CVariantPro
 
 void CServiceBase::SetProperty(const std::string &name, const CVariant &variant)
 {
-    m_mainloop->RunOnce(boost::bind(&CServiceBase::_SetProperty, this, name, variant));
+    m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_SetProperty, this, name, variant));
 }
 
 void CServiceBase::_SetProperty(const std::string &name, const CVariant &variant)

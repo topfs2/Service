@@ -31,12 +31,12 @@ CPowerService::~CPowerService()
 
 void CPowerService::Shutdown()
 {
-    m_mainloop->RunOnce(boost::bind(&CPowerService::_Shutdown, this));
+    m_mainloop->ExecuteOnIdle(boost::bind(&CPowerService::_Shutdown, this));
 }
 
 void CPowerService::Sleep()
 {
-    m_mainloop->RunOnce(boost::bind(&CPowerService::_Sleep, this));
+    m_mainloop->ExecuteOnIdle(boost::bind(&CPowerService::_Sleep, this));
 }
 
 void CPowerService::_Shutdown()

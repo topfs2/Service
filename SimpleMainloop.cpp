@@ -20,10 +20,12 @@
  */
 
 #include "SimpleMainloop.h"
+#include "Time.h"
 
 CSimpleMainloop::CSimpleMainloop()
 {
-  m_run = false;
+    m_threadID = 0;
+    m_run = false;
 }
 
 CSimpleMainloop::~CSimpleMainloop()
@@ -31,11 +33,41 @@ CSimpleMainloop::~CSimpleMainloop()
     Quit();
 }
 
-void CSimpleMainloop::RunOnce(RunFunction f)
+void CSimpleMainloop::ExecuteOnIdle(RunFunction f)
+{
+    ExecuteAt(f, timing::GetTimeMS());
+}
+
+void CSimpleMainloop::ExecutePeriodical(RunFunction f, uint32_t everyMS)
+{
+    m_condition.acquire();
+    RunRequest r;
+    r.method = f;
+    r.time = everyMS;
+    r.scheduledBy = -1;
+
+    m_periodical.push_back(r);
+
+    r.method = f;
+    r.time = timing::GetTimeMS() + everyMS;
+    r.scheduledBy = m_periodical.size() - 1;
+
+    m_schedule.push_back(r);
+
+    m_condition.notifyAll();
+    m_condition.release();
+}
+
+void CSimpleMainloop::ExecuteAt(RunFunction f, uint32_t atMS)
 {
     m_condition.acquire();
 
-    m_schedule.push_back(f);
+    RunRequest r;
+    r.method = f;
+    r.time = atMS;
+    r.scheduledBy = -1;
+
+    m_schedule.push_back(r);
 
     m_condition.notifyAll();
     m_condition.release();
@@ -49,24 +81,58 @@ void CSimpleMainloop::Quit()
 void CSimpleMainloop::run()
 {
     m_run = true;
+    m_threadID = threading::CThread::self();
 
     m_condition.acquire();
 
     while (m_run)
     {
-        RunFunction f = NULL;
+        RunQueue::iterator lowest = FindNextScheduled();
 
-        f = m_schedule.front();
-        if (f)
-        {
-            m_schedule.pop_front();
-            m_condition.release();
+        if (lowest != m_schedule.end()) {
+            long now = timing::GetTimeMS();
+            if (now >= lowest->time) {
+                RunFunction f = lowest->method;
+                int scheduledBy = lowest->scheduledBy;
+                m_schedule.erase(lowest);
+                m_condition.release();
 
-            f();
+                f();
 
-            m_condition.acquire();
+                m_condition.acquire();
+
+                // If the scheduled run was a periodical, schedule it again after "everyMS"
+                if (scheduledBy >= 0)
+                {
+                    RunRequest r = m_periodical[scheduledBy];
+                    r.time += now;
+                    r.scheduledBy = scheduledBy;
+
+                    m_schedule.push_back(r);
+                }
+            } else {
+                m_condition.timedWait(lowest->time - now);
+            }
+        } else {
+            // Nothing is scheduled, wait indefinetly
+            m_condition.wait(); 
         }
     }
 
     m_condition.release();
+}
+
+// Private
+// m_condition must be acquired before executed
+CSimpleMainloop::RunQueue::iterator CSimpleMainloop::FindNextScheduled()
+{
+    RunQueue::iterator lowest = m_schedule.end();
+
+    for (RunQueue::iterator itr = m_schedule.begin(); itr != m_schedule.end(); itr++) {
+        if (lowest == m_schedule.end() || itr->time < lowest->time) {
+            lowest = itr;
+        }
+    }
+
+    return lowest;
 }

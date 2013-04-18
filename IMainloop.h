@@ -10,7 +10,11 @@ public:
 
     virtual ~IMainloop() { };
 
-    virtual void RunOnce(RunFunction f) = 0;
+    virtual void ExecuteOnIdle(RunFunction f) = 0;
+/*
+    virtual void ExecutePeriodical(RunFunction f, uint32_t everyMS) = 0;
+    virtual void ExecuteAt(RunFunction f, uint32_t atMS) = 0;
+*/
 
     virtual void Quit() = 0;
 };
