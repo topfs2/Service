@@ -22,7 +22,6 @@
 
 #include <string>
 #include <boost/signals2/signal.hpp>
-#include <boost/thread/future.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "Locks.h"
@@ -31,22 +30,18 @@
 
 class CServiceBase
 {
-private:
-    typedef boost::promise<CVariant> CVariantPromise;
-    typedef boost::shared_ptr<CVariantPromise> CVariantPromisePtr;
-
 public:
     CServiceBase(MainloopPtr mainloop);
     virtual ~CServiceBase();
 
     typedef boost::signals2::signal<void ()> voidSignal;
 
+    typedef boost::function<void (std::string, CVariant)> PropertyChangedFunction;
     typedef boost::signals2::signal<void (std::string, CVariant)> propertySignal;
     propertySignal onPropertyChange;
 
-
-  boost::unique_future<CVariant> GetProperty(const std::string &name, const CVariant &fallback = CVariant::ConstNullVariant);
-  inline boost::unique_future<CVariant> operator[](const std::string &name);
+    void GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback);
+    void GetProperty(const std::string &name, PropertyChangedFunction callback);
 
 protected:
     void SetProperty(const std::string &name, const CVariant &variant);
@@ -54,7 +49,7 @@ protected:
     MainloopPtr m_mainloop;
 
 private:
-    void _GetProperty(std::string name, CVariant fallback, CVariantPromisePtr p);
+    void _GetProperty(std::string name, CVariant fallback, PropertyChangedFunction callback);
     void _SetProperty(const std::string &name, const CVariant &variant);
 
     typedef std::map<std::string, CVariant> PropertyMap;

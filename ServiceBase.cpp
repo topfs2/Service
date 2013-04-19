@@ -33,25 +33,23 @@ CServiceBase::~CServiceBase()
 {
 }
 
-unique_future<CVariant> CServiceBase::GetProperty(const std::string &name, const CVariant &fallback)
+void CServiceBase::GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback)
 {
-    CVariantPromisePtr p = CVariantPromisePtr(new CVariantPromise());
-    m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, p));
-    return p->get_future();
+    m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, callback));
 }
 
-unique_future<CVariant> CServiceBase::operator[](const std::string &name)
+void CServiceBase::GetProperty(const std::string &name, PropertyChangedFunction callback)
 {
-    return GetProperty(name);
+    GetProperty(name, CVariant::ConstNullVariant, callback);
 }
 
-void CServiceBase::_GetProperty(std::string name, CVariant fallback, CVariantPromisePtr p)
+void CServiceBase::_GetProperty(std::string name, CVariant fallback, PropertyChangedFunction callback)
 {
     PropertyMap::const_iterator itr = m_properties.find(name);
     if (itr == m_properties.end())
-        p->set_value(fallback);
+        callback(name, fallback);
     else
-        p->set_value(itr->second);
+        callback(name, itr->second);
 }
 
 void CServiceBase::SetProperty(const std::string &name, const CVariant &variant)
