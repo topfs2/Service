@@ -31,11 +31,15 @@ public:
     void Shutdown();
     void Sleep();
 
+    void attachOnShutdown(voidFunction callback);
+    void attachOnSleep(voidFunction callback);
+    void attachOnWake(voidFunction callback);
+
+private:
     voidSignal onShutdown;
     voidSignal onSleep;
     voidSignal onWake;
 
-private:
     void _Shutdown();
     void _Sleep();
 };

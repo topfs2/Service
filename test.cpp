@@ -93,19 +93,19 @@ public:
 
 int main() {
     CPowerService pm(mainloop);
-    pm.onPropertyChange.connect(&onPropertyChange);
-    pm.onShutdown.connect(onShutdown);
-    pm.onSleep.connect(onSleep);
+    pm.attachOnPropertyChange(&onPropertyChange);
+    pm.attachOnShutdown(onShutdown);
+    pm.attachOnSleep(onSleep);
 
     CFirstCallbackPtr ptr(new CFirstCallback());
-    pm.onPropertyChange.connect(CServiceBase::propertySignal::slot_type(&CFirstCallback::onPropertyChange, ptr.get(), _1, _2).track(ptr));
-    pm.onShutdown.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onShutdown, ptr.get()).track(ptr));
-    pm.onSleep.connect(CServiceBase::voidSignal::slot_type(&CFirstCallback::onSleep, ptr.get()).track(ptr));
+    pm.attachOnPropertyChange(CServiceBase::propertySignal::slot_type(&CFirstCallback::onPropertyChange, ptr.get(), _1, _2).track(ptr));
+    pm.attachOnShutdown(CServiceBase::voidSignal::slot_type(&CFirstCallback::onShutdown, ptr.get()).track(ptr));
+    pm.attachOnSleep(CServiceBase::voidSignal::slot_type(&CFirstCallback::onSleep, ptr.get()).track(ptr));
 
     CSecondCallback *ptrTwo = new CSecondCallback();
-    pm.onPropertyChange.connect(boost::bind(&CSecondCallback::onPropertyChange, ptrTwo, _1, _2));
-    pm.onShutdown.connect(boost::bind(&CSecondCallback::onShutdown, ptrTwo));
-    pm.onSleep.connect(boost::bind(&CSecondCallback::onSleep, ptrTwo));
+    pm.attachOnPropertyChange(boost::bind(&CSecondCallback::onPropertyChange, ptrTwo, _1, _2));
+    pm.attachOnShutdown(boost::bind(&CSecondCallback::onShutdown, ptrTwo));
+    pm.attachOnSleep(boost::bind(&CSecondCallback::onSleep, ptrTwo));
 
     std::cout << "==Calling sleep==" << std::endl;
     pm.Sleep();

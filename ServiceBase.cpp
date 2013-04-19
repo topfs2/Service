@@ -33,6 +33,11 @@ CServiceBase::~CServiceBase()
 {
 }
 
+void CServiceBase::attachOnPropertyChange(PropertyChangedFunction callback)
+{
+    onPropertyChange.connect(callback);
+}
+
 void CServiceBase::GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback)
 {
     m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, callback));

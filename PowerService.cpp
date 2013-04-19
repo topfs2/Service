@@ -39,6 +39,21 @@ void CPowerService::Sleep()
     m_mainloop->ExecuteOnIdle(boost::bind(&CPowerService::_Sleep, this));
 }
 
+void CPowerService::attachOnShutdown(voidFunction callback)
+{
+    onShutdown.connect(callback);
+}
+
+void CPowerService::attachOnSleep(voidFunction callback)
+{
+    onSleep.connect(callback);
+}
+
+void CPowerService::attachOnWake(voidFunction callback)
+{
+    onWake.connect(callback);
+}
+
 void CPowerService::_Shutdown()
 {
     onShutdown();

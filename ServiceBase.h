@@ -34,11 +34,12 @@ public:
     CServiceBase(MainloopPtr mainloop);
     virtual ~CServiceBase();
 
+    typedef boost::function<void ()> voidFunction;
     typedef boost::signals2::signal<void ()> voidSignal;
 
-    typedef boost::function<void (std::string, CVariant)> PropertyChangedFunction;
     typedef boost::signals2::signal<void (std::string, CVariant)> propertySignal;
-    propertySignal onPropertyChange;
+    typedef boost::function<void (std::string, CVariant)> PropertyChangedFunction;
+    void attachOnPropertyChange(PropertyChangedFunction callback);
 
     void GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback);
     void GetProperty(const std::string &name, PropertyChangedFunction callback);
@@ -49,6 +50,8 @@ protected:
     MainloopPtr m_mainloop;
 
 private:
+    propertySignal onPropertyChange;
+
     void _GetProperty(std::string name, CVariant fallback, PropertyChangedFunction callback);
     void _SetProperty(const std::string &name, const CVariant &variant);
 
