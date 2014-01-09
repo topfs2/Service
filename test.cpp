@@ -40,7 +40,7 @@ void onPropertyChange(std::string key, CVariant value)
 void onShutdown()
 {
     std::cout << "onShutdown" << std::endl;
-    mainloop->Quit();
+    mainloop->quit();
 }
 
 void onSleep()

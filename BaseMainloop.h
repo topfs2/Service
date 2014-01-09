@@ -26,17 +26,19 @@
 #include <deque>
 #include <vector>
 
-class CBaseMainloop : public IMainloop
+class CBaseMainloop : public IExclusiveThreadMainloop
 {
 public:
     CBaseMainloop();
     virtual ~CBaseMainloop();
 
-    virtual void ExecuteOnIdle(RunFunction f);
-    virtual void ExecutePeriodical(RunFunction f, uint32_t everyMS);
-    virtual void ExecuteAt(RunFunction f, uint32_t atMS);
+    virtual void execute(RunFunction f);
 
-    virtual void Quit();
+    virtual void schedule(RunFunction f, uint32_t inMS = 0);
+    virtual void scheduleAt(RunFunction f, uint32_t atMS = 0);
+    virtual void schedulePeriodical(RunFunction f, uint32_t everyMS);
+
+    virtual void quit();
 
 protected:
     void process();
@@ -47,6 +49,7 @@ private:
         RunFunction method;
         long time;
         int scheduledBy;
+        bool *signal;
     };
 
     typedef std::vector<RunRequest> RunQueue;

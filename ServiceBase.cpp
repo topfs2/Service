@@ -40,7 +40,7 @@ void CServiceBase::attachOnPropertyChange(PropertyChangedFunction callback)
 
 void CServiceBase::GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback)
 {
-    m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, callback));
+    m_mainloop->schedule(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, callback));
 }
 
 void CServiceBase::GetProperty(const std::string &name, PropertyChangedFunction callback)
@@ -59,7 +59,7 @@ void CServiceBase::_GetProperty(std::string name, CVariant fallback, PropertyCha
 
 void CServiceBase::SetProperty(const std::string &name, const CVariant &variant)
 {
-    m_mainloop->ExecuteOnIdle(boost::bind(&CServiceBase::_SetProperty, this, name, variant));
+    m_mainloop->schedule(boost::bind(&CServiceBase::_SetProperty, this, name, variant));
 }
 
 void CServiceBase::_SetProperty(const std::string &name, const CVariant &variant)

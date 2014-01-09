@@ -30,21 +30,71 @@ CBaseMainloop::CBaseMainloop()
 
 CBaseMainloop::~CBaseMainloop()
 {
-    Quit();
+    quit();
 }
 
-void CBaseMainloop::ExecuteOnIdle(RunFunction f)
+void CBaseMainloop::execute(RunFunction f)
 {
-    ExecuteAt(f, timing::GetTimeMS());
+    m_condition.acquire();
+
+    if (m_run) {
+      threading::thread_id_t threadID = threading::CThread::self();
+
+      if (threadID == m_threadID) {
+        f();
+      } else {
+        RunRequest r;
+        r.method = f;
+        r.time = timing::GetTimeMS();
+        r.scheduledBy = -1;
+        r.signal = new bool(false);
+
+        m_schedule.push_back(r);
+
+        m_condition.notifyAll();
+
+        while (!*r.signal) {
+          m_condition.wait();
+        }
+
+        delete r.signal;
+      }
+    } else {
+      // TODO What to do here?
+    }
+
+    m_condition.release();
 }
 
-void CBaseMainloop::ExecutePeriodical(RunFunction f, uint32_t everyMS)
+void CBaseMainloop::schedule(RunFunction f, uint32_t inMS)
+{
+    scheduleAt(f, timing::GetTimeMS() + inMS);
+}
+
+void CBaseMainloop::scheduleAt(RunFunction f, uint32_t atMS)
+{
+    m_condition.acquire();
+
+    RunRequest r;
+    r.method = f;
+    r.time = atMS;
+    r.scheduledBy = -1;
+    r.signal = NULL;
+
+    m_schedule.push_back(r);
+
+    m_condition.notifyAll();
+    m_condition.release();
+}
+
+void CBaseMainloop::schedulePeriodical(RunFunction f, uint32_t everyMS)
 {
     m_condition.acquire();
     RunRequest r;
     r.method = f;
     r.time = everyMS;
     r.scheduledBy = -1;
+    r.signal = NULL;
 
     m_periodical.push_back(r);
 
@@ -58,22 +108,7 @@ void CBaseMainloop::ExecutePeriodical(RunFunction f, uint32_t everyMS)
     m_condition.release();
 }
 
-void CBaseMainloop::ExecuteAt(RunFunction f, uint32_t atMS)
-{
-    m_condition.acquire();
-
-    RunRequest r;
-    r.method = f;
-    r.time = atMS;
-    r.scheduledBy = -1;
-
-    m_schedule.push_back(r);
-
-    m_condition.notifyAll();
-    m_condition.release();
-}
-
-void CBaseMainloop::Quit()
+void CBaseMainloop::quit()
 {
     m_run = false;
 }
@@ -100,6 +135,11 @@ void CBaseMainloop::process()
                 f();
 
                 m_condition.acquire();
+
+                if (lowest->signal) {
+                  *lowest->signal = true;
+                  m_condition.notifyAll();
+                }
 
                 // If the scheduled run was a periodical, schedule it again after "everyMS"
                 if (scheduledBy >= 0)
