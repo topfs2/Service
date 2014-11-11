@@ -20,7 +20,27 @@
  */
 
 #include "PowerService.h"
+#include "MessagesPower.h"
 
+CPowerService::CPowerService(MainloopPtr mainloop) : CServiceBase(mainloop)
+{
+}
+
+void CPowerService::HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg)
+{
+    if (msg->IsType(MESSAGE_TYPE_SHUTDOWN)) {
+        std::cout << "Shutdown" << std::endl;
+
+        source->PostMessage(shared_from_this(), destination, "", MessagePtr(new messages::COnShutdown()));
+    } else if (msg->IsType(MESSAGE_TYPE_SLEEP)) {
+        std::cout << "Sleep" << std::endl;
+
+        source->PostMessage(shared_from_this(), destination, "", MessagePtr(new messages::COnSleep()));
+    } else {
+        CServiceBase::HandleMessage(source, sender, destination, msg);
+    }
+}
+/*
 CPowerService::CPowerService(MainloopPtr mainloop) : CServiceBase(mainloop)
 {
 }
@@ -63,3 +83,4 @@ void CPowerService::_Sleep()
 {
     onSleep();
 }
+*/

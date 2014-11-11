@@ -30,92 +30,118 @@
 #include "Variant.h"
 #include "ProcessMainloop.h"
 
-CProcessMainloopPtr mainloop = CProcessMainloopPtr(new CProcessMainloop());
+#include "ReactorMailbox.h"
+#include "ServiceBase.h"
+#include "MessageRouter.h"
 
-void onPropertyChange(std::string key, CVariant value)
-{
-    std::cout << "onPropertyChange(" << key << ", " << (std::string)value << ")" << std::endl;
+#include "MessagesCore.h"
+#include "MessagesProperties.h"
+#include "MessagesPower.h"
+
+#define MESSAGE_TYPE_PING (0x4)
+#define MESSAGE_TYPE_PONG (0x8)
+
+void debug_message(MessagePtr msg) {
+    std::cout << "message {" << std::endl
+              << "\ttype="                  << msg->Type() << std::endl << std::endl
+
+              << "\tis_notification="       << msg->IsType(MESSAGE_TYPE_NOTIFICATION) << std::endl
+              << "\tis_error="              << msg->IsType(MESSAGE_TYPE_ERROR) << std::endl
+              << "\tis_request="            << msg->IsType(MESSAGE_TYPE_REQUEST) << std::endl
+              << "\tis_response="           << msg->IsType(MESSAGE_TYPE_RESPONSE) << std::endl
+
+              << "\tis_ping="               << msg->IsType(MESSAGE_TYPE_PING) << std::endl
+              << "\tis_pong="               << msg->IsType(MESSAGE_TYPE_PONG) << std::endl
+
+              << "\tis_get_property="       << msg->IsType(MESSAGE_TYPE_GET_PROPERTY) << std::endl
+              << "\tis_set_property="       << msg->IsType(MESSAGE_TYPE_SET_PROPERTY) << std::endl
+              << "\tis_change_property="    << msg->IsType(MESSAGE_TYPE_CHANGE_PROPERTY) << std::endl
+
+              << "\tis_on_shutdown="        << msg->IsType(MESSAGE_TYPE_ON_SHUTDOWN) << std::endl
+              << "\tis_on_sleep="           << msg->IsType(MESSAGE_TYPE_ON_SLEEP) << std::endl
+              << "\tis_on_wake="            << msg->IsType(MESSAGE_TYPE_ON_WAKE) << std::endl
+
+              << "\tis_shutdown="           << msg->IsType(MESSAGE_TYPE_SHUTDOWN) << std::endl
+              << "\tis_sleep="              << msg->IsType(MESSAGE_TYPE_SLEEP) << std::endl
+              << "}" << std::endl;
 }
 
-void onShutdown()
+CProcessMainloopPtr mainloop = CProcessMainloopPtr(new CProcessMainloop());
+
+class CPingPongService : public CServiceBase
 {
-    std::cout << "onShutdown" << std::endl;
+public:
+    CPingPongService(MainloopPtr mainloop) : CServiceBase(mainloop) { }
+
+protected:
+    virtual void HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg)
+    {
+        std::cout << "CPinPongService::HandleMessage sender=" << sender << " destination=" << destination << std::endl;
+        debug_message(msg);
+
+        if (msg->IsType(MESSAGE_TYPE_PING)) {
+            messages::CRequestPtr request = boost::dynamic_pointer_cast<messages::CRequest>(msg);
+
+            MessagePtr reply(new messages::CResponse(MESSAGE_TYPE_PONG, request->id));
+            source->PostMessage(shared_from_this(), destination, sender, reply);
+        } else {
+            CServiceBase::HandleMessage(source, sender, destination, msg);
+        }
+    }
+};
+
+class CTestService : public CReactorMailbox
+{
+public:
+    CTestService(MainloopPtr mainloop) : CReactorMailbox(mainloop) { }
+
+protected:
+    virtual void HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg)
+    {
+        std::cout << "CTestService::HandleMessage sender=" << sender << " destination=" << destination << std::endl;
+        debug_message(msg);
+    }
+};
+
+void quit_defer()
+{
     mainloop->quit();
 }
 
-void onSleep()
-{
-    std::cout << "onSleep" << std::endl;
-}
+int main() {
+    MailboxPtr pingpong(new CPingPongService(mainloop));
+    MailboxPtr ts(new CTestService(mainloop));
+    MailboxPtr ps(new CPowerService(mainloop));
 
-class CFirstCallback
-{
-public:
-    void onPropertyChange(std::string key, CVariant value)
+    CMessageRouterPtr router(new CMessageRouter());
+    router->RegisterMailbox("ping", pingpong);
+    router->RegisterMailbox("power", ps);
+    std::string address = router->RegisterMailbox(ts);
+
+    std::cout << "Registered test at " << address << std::endl;
+/*
     {
-        std::cout << "CFirstCallback::onPropertyChange(" << key << ", " << (std::string)value << ")" << std::endl;
+        MessagePtr msg(new messages::CRequest(MESSAGE_TYPE_PING, 0));
+        router.PostMessage(ts, address, "ping", msg);
     }
-
-    void onShutdown()
-    {
-        std::cout << "CFirstCallback::onShutdown" << std::endl;
+*/
+/*
+    { // Test broadcast
+        MessagePtr msg(new CMessage(0));
+        router.PostMessage(ts, address, "", msg);
     }
-
-    void onSleep()
-    {
-        std::cout << "CFirstCallback::onSleep" << std::endl;
-    }
-};
-
-typedef boost::shared_ptr<CFirstCallback> CFirstCallbackPtr;
+*/
 
 /*
- * Notice that using boost::signals2::trackable is discouraged due to it not always being threadsafe.
- */
-class CSecondCallback : public boost::signals2::trackable
-{
-public:
-    void onPropertyChange(std::string key, CVariant value)
-    {
-        std::cout << "CSecondCallback::onPropertyChange(" << key << ", " << (std::string)value << ")" << std::endl;
-    }
+    MessagePtr msg(new messages::CGetProperty("foo", 12));
+    router.PostMessage(ts, address, "ping", msg);
+*/
 
-    void onShutdown()
-    {
-        std::cout << "CSecondCallback::onShutdown" << std::endl;
-    }
+    MessagePtr msg(new messages::CShutdown(14));
+    router->PostMessage(ts, address, "power", msg);
 
-    void onSleep()
-    {
-        std::cout << "CSecondCallback::onSleep" << std::endl;
-    }
-};
-
-int main() {
-    CPowerService pm(mainloop);
-    pm.attachOnPropertyChange(&onPropertyChange);
-    pm.attachOnShutdown(onShutdown);
-    pm.attachOnSleep(onSleep);
-
-    CFirstCallbackPtr ptr(new CFirstCallback());
-    pm.attachOnPropertyChange(CServiceBase::propertySignal::slot_type(&CFirstCallback::onPropertyChange, ptr.get(), _1, _2).track(ptr));
-    pm.attachOnShutdown(CServiceBase::voidSignal::slot_type(&CFirstCallback::onShutdown, ptr.get()).track(ptr));
-    pm.attachOnSleep(CServiceBase::voidSignal::slot_type(&CFirstCallback::onSleep, ptr.get()).track(ptr));
-
-    CSecondCallback *ptrTwo = new CSecondCallback();
-    pm.attachOnPropertyChange(boost::bind(&CSecondCallback::onPropertyChange, ptrTwo, _1, _2));
-    pm.attachOnShutdown(boost::bind(&CSecondCallback::onShutdown, ptrTwo));
-    pm.attachOnSleep(boost::bind(&CSecondCallback::onSleep, ptrTwo));
-
-    std::cout << "==Calling sleep==" << std::endl;
-    pm.Sleep();
-
-    delete ptrTwo;
-
-    pm.GetProperty("CanPowerdown", false, &onPropertyChange);
-
-    std::cout << "==Calling shutdown==" << std::endl;
-    pm.Shutdown();
-
+    mainloop->schedule(quit_defer, 10);
     mainloop->run();
+
+    return 0;
 }

@@ -20,41 +20,20 @@
  *
  */
 
-#include <string>
-#include <boost/signals2/signal.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include "Locks.h"
+#include "ReactorMailbox.h"
 #include "Variant.h"
-#include "IMainloop.h"
+#include <map>
 
-class CServiceBase
+class CServiceBase : public CReactorMailbox
 {
 public:
     CServiceBase(MainloopPtr mainloop);
     virtual ~CServiceBase();
 
-    typedef boost::function<void ()> voidFunction;
-    typedef boost::signals2::signal<void ()> voidSignal;
-
-    typedef boost::signals2::signal<void (std::string, CVariant)> propertySignal;
-    typedef boost::function<void (std::string, CVariant)> PropertyChangedFunction;
-    void attachOnPropertyChange(PropertyChangedFunction callback);
-
-    void GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback);
-    void GetProperty(const std::string &name, PropertyChangedFunction callback);
-
 protected:
-    void SetProperty(const std::string &name, const CVariant &variant);
-
-    MainloopPtr m_mainloop;
+    void HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg);
 
 private:
-    propertySignal onPropertyChange;
-
-    void _GetProperty(std::string name, CVariant fallback, PropertyChangedFunction callback);
-    void _SetProperty(const std::string &name, const CVariant &variant);
-
     typedef std::map<std::string, CVariant> PropertyMap;
     PropertyMap m_properties;
 };

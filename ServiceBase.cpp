@@ -20,54 +20,40 @@
  */
 
 #include "ServiceBase.h"
+#include "MessagesProperties.h"
 
-using namespace threading;
-using namespace boost;
-
-CServiceBase::CServiceBase(MainloopPtr mainloop)
+CServiceBase::CServiceBase(MainloopPtr mainloop) : CReactorMailbox(mainloop)
 {
-    m_mainloop = mainloop;
 }
 
 CServiceBase::~CServiceBase()
 {
 }
 
-void CServiceBase::attachOnPropertyChange(PropertyChangedFunction callback)
+void CServiceBase::HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg)
 {
-    onPropertyChange.connect(callback);
-}
+    if (msg->IsType(MESSAGE_TYPE_GET_PROPERTY)) {
+        messages::CGetPropertyPtr request = boost::dynamic_pointer_cast<messages::CGetProperty>(msg);
 
-void CServiceBase::GetProperty(const std::string &name, const CVariant &fallback, PropertyChangedFunction callback)
-{
-    m_mainloop->schedule(boost::bind(&CServiceBase::_GetProperty, this, name, fallback, callback));
-}
+        CVariant value;
+        PropertyMap::const_iterator itr = m_properties.find(request->key);
+        if (itr != m_properties.end())
+            value = itr->second;
 
-void CServiceBase::GetProperty(const std::string &name, PropertyChangedFunction callback)
-{
-    GetProperty(name, CVariant::ConstNullVariant, callback);
-}
+        MessagePtr response(new messages::CChangeProperty(request->key, value, request->id));
 
-void CServiceBase::_GetProperty(std::string name, CVariant fallback, PropertyChangedFunction callback)
-{
-    PropertyMap::const_iterator itr = m_properties.find(name);
-    if (itr == m_properties.end())
-        callback(name, fallback);
-    else
-        callback(name, itr->second);
-}
+        source->PostMessage(shared_from_this(), destination, sender, response);
+    } else if (msg->IsType(MESSAGE_TYPE_SET_PROPERTY)) {
+        messages::CSetPropertyPtr request = boost::dynamic_pointer_cast<messages::CSetProperty>(msg);
 
-void CServiceBase::SetProperty(const std::string &name, const CVariant &variant)
-{
-    m_mainloop->schedule(boost::bind(&CServiceBase::_SetProperty, this, name, variant));
-}
+        CVariant value = request->value;
 
-void CServiceBase::_SetProperty(const std::string &name, const CVariant &variant)
-{
-    PropertyMap::iterator itr = m_properties.find(name);
-    if (itr == m_properties.end() || !variant.Equals(itr->second))
-    {
-        m_properties[name] = variant;
-        onPropertyChange(name, variant);
+        PropertyMap::iterator itr = m_properties.find(request->key);
+        if (itr == m_properties.end() || !value.Equals(itr->second)) {
+            m_properties[request->key] = value;
+            source->PostMessage(shared_from_this(), destination, "", MessagePtr(new messages::CChangeProperty(request->key, value, 0)));
+        }
+
+//        source->PostMessage(shared_from_this(), destination, sender, MessagePtr(new messages::CChangeProperty(request->key, value, request->id)));
     }
 }

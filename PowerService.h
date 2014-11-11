@@ -26,6 +26,16 @@ class CPowerService : public CServiceBase
 {
 public:
     CPowerService(MainloopPtr mainloop);
+
+protected:
+    void HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg);
+};
+
+/*
+class CPowerService : public CServiceBase
+{
+public:
+    CPowerService(MainloopPtr mainloop);
     virtual ~CPowerService();
 
     void Shutdown();
@@ -43,3 +53,4 @@ private:
     void _Shutdown();
     void _Sleep();
 };
+*/
