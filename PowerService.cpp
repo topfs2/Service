@@ -24,10 +24,15 @@
 
 CPowerService::CPowerService(MainloopPtr mainloop) : CServiceBase(mainloop)
 {
+  m_properties["CanShutdown"]  = true;
+  m_properties["CanSuspend"]   = true;
+  m_properties["CanHibernate"] = true;
+  m_properties["CanReboot"]    = true;
 }
 
 void CPowerService::HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg)
 {
+/*
     if (msg->IsType(MESSAGE_TYPE_SHUTDOWN)) {
         std::cout << "Shutdown" << std::endl;
 
@@ -39,6 +44,9 @@ void CPowerService::HandleMessage(MailboxPtr source, std::string sender, std::st
     } else {
         CServiceBase::HandleMessage(source, sender, destination, msg);
     }
+*/
+
+  CServiceBase::HandleMessage(source, sender, destination, msg);
 }
 /*
 CPowerService::CPowerService(MainloopPtr mainloop) : CServiceBase(mainloop)

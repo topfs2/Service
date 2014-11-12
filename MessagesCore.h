@@ -9,35 +9,80 @@
 
 namespace messages
 {
+    class IPayload
+    {
+      virtual ~IPayload() { };
+    };
+
+    typedef boost::shared_ptr<IPayload> CPayloadPtr;
+
     class CNotification : public CMessage
     {
     public:
-        CNotification(int message_type) : CMessage(message_type | MESSAGE_TYPE_NOTIFICATION) { };
+        CNotification(const std::string &method) : CMessage(MESSAGE_TYPE_NOTIFICATION), method(method) { };
         virtual ~CNotification() { };
+
+        const std::string method;
     };
 
     class CRequest : public CMessage
     {
     public:
-        CRequest(int message_type, unsigned int id) : CMessage(message_type | MESSAGE_TYPE_REQUEST), id(id) { };
+        CRequest(const std::string &method, unsigned int id = 0) : CMessage(MESSAGE_TYPE_REQUEST), method(method), id(id) { };
         virtual ~CRequest() { };
+
+        const std::string method;
+        const unsigned int id;
     };
 
     class CResponse : public CMessage
     {
     public:
-        CResponse(int message_type, unsigned int id) : CMessage(message_type | MESSAGE_TYPE_RESPONSE), id(id) { };
+        CResponse(unsigned int id) : CMessage(MESSAGE_TYPE_RESPONSE), id(id) { };
         virtual ~CResponse() { };
+
+        const unsigned int id;
+    };
+
+    template <class T>
+    class CTemplateNotification : public CNotification
+    {
+    public:
+        CTemplateNotification(const std::string &method, const T &arguments) : CNotification(method), arguments(arguments) { };
+        virtual ~CTemplateNotification() { };
+
+        const T arguments;
+    };
+
+    template <class T>
+    class CTemplateRequest : public CRequest
+    {
+    public:
+        CTemplateRequest(const std::string &method, const T &arguments, unsigned int id = 0) : CRequest(method, id), arguments(arguments) { };
+        virtual ~CTemplateRequest() { };
+
+        const T arguments;
+    };
+
+    template <class T>
+    class CTemplateResponse : public CResponse
+    {
+    public:
+        CTemplateResponse(const T &result, unsigned int id) : CResponse(id), result(result) { };
+        virtual ~CTemplateResponse() { };
+
+        const T result;
     };
 
     class CError : public CMessage
     {
     public:
-        CError(int code, std::string &message, unsigned int id = 0) : CMessage(MESSAGE_TYPE_ERROR), code(code), message(message), id(id) { };
+        CError(int code, const std::string &message, unsigned int id = 0) : CMessage(MESSAGE_TYPE_ERROR), code(code), message(message), id(id) { };
         virtual ~CError() { };
 
         const unsigned int code;
         const std::string message;
+        const unsigned int id;
     };
 
     typedef boost::shared_ptr<CError> CErrorPtr;

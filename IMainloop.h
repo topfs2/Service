@@ -27,7 +27,7 @@ public:
     }
 
     template <typename R>
-    void scheduleAt(boost::function<R ()> f, boost::function<void (R)> callback, boost::shared_ptr<IMainloop> mainloop, uint32_t atMS)
+    void scheduleAt(boost::function<R ()> f, boost::function<void (R)> callback, boost::shared_ptr<IMainloop> mainloop, uint64_t atMS)
     {
       if (mainloop)
         scheduleAt(boost::bind(scheduleResultWrapper<R>, f, callback, mainloop), atMS);
@@ -39,7 +39,7 @@ public:
         schedule(boost::bind(scheduleWrapper, f, callback, mainloop), inMS);
     }
 
-    void scheduleAt(RunFunction f, RunFunction callback, boost::shared_ptr<IMainloop> mainloop, uint32_t atMS)
+    void scheduleAt(RunFunction f, RunFunction callback, boost::shared_ptr<IMainloop> mainloop, uint64_t atMS)
     {
       if (mainloop)
         scheduleAt(boost::bind(scheduleWrapper, f, callback, mainloop), atMS);
@@ -50,7 +50,7 @@ public:
 
     /* schedule returns imediately and the function will execute as close to the timing possible */
     virtual void schedule(RunFunction f, uint32_t inMS = 0) = 0;
-    virtual void scheduleAt(RunFunction f, uint32_t atMS) = 0;
+    virtual void scheduleAt(RunFunction f, uint64_t atMS) = 0;
     /* schedulePeriodical will execute as close to everyMS as possible */
     virtual void schedulePeriodical(RunFunction f, uint32_t everyMS) = 0;
 

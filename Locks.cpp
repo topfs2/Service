@@ -61,6 +61,7 @@ void CCondition::wait()
 
 void CCondition::timedWait(long msec)
 {
+/*
     struct timespec timeToWait;
     struct timeval now;
 
@@ -70,6 +71,17 @@ void CCondition::timedWait(long msec)
     timeToWait.tv_nsec = (now.tv_usec + msec * 1000UL) * 1000UL;
 
     pthread_cond_timedwait(&m_condition, &m_mutex, &timeToWait);
+*/
+    struct timeval tv;
+    struct timespec ts;
+
+    gettimeofday(&tv, NULL);
+    ts.tv_sec = time(NULL) + msec / 1000;
+    ts.tv_nsec = tv.tv_usec * 1000 + 1000 * 1000 * (msec % 1000);
+    ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
+    ts.tv_nsec %= (1000 * 1000 * 1000);
+
+    pthread_cond_timedwait(&m_condition, &m_mutex, &ts);
 }
 
 void CCondition::notifyAll()

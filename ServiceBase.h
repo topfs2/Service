@@ -33,7 +33,6 @@ public:
 protected:
     void HandleMessage(MailboxPtr source, std::string sender, std::string destination, MessagePtr msg);
 
-private:
     typedef std::map<std::string, CVariant> PropertyMap;
     PropertyMap m_properties;
 };

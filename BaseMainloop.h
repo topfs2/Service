@@ -35,7 +35,7 @@ public:
     virtual void execute(RunFunction f);
 
     virtual void schedule(RunFunction f, uint32_t inMS = 0);
-    virtual void scheduleAt(RunFunction f, uint32_t atMS = 0);
+    virtual void scheduleAt(RunFunction f, uint64_t atMS = 0);
     virtual void schedulePeriodical(RunFunction f, uint32_t everyMS);
 
     virtual void quit();
@@ -47,7 +47,7 @@ private:
     threading::CCondition m_condition;
     struct RunRequest {
         RunFunction method;
-        long time;
+        uint64_t time;
         int scheduledBy;
         bool *signal;
     };

@@ -6,7 +6,7 @@
 class CMessage
 {
 public:
-    CMessage(int type, unsigned int id = 0) : type(type), id(id) { };
+    CMessage(int type) : type(type) { };
     virtual ~CMessage() { };
 
     const int Type() const { return type; }
@@ -16,7 +16,6 @@ public:
     }
 
     const int type;
-    const unsigned int id;
 };
 
 typedef boost::shared_ptr<CMessage> MessagePtr;

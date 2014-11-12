@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MessagesCore.h"
-
+/*
 #define MESSAGE_TYPE_ON_SHUTDOWN    (0x100)
 #define MESSAGE_TYPE_ON_SLEEP       (0x200)
 #define MESSAGE_TYPE_ON_WAKE        (0x400)
@@ -53,3 +53,4 @@ namespace messages
     typedef boost::shared_ptr<CShutdown> CShutdownPtr;
     typedef boost::shared_ptr<CSleep> CSleepPtr;
 }
+*/
